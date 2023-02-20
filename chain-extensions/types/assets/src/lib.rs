@@ -131,8 +131,8 @@ impl ink::env::chain_extension::FromStatusCode for Outcome {
 #[cfg_attr(feature = "substrate", derive(MaxEncodedLen))]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 #[cfg_attr(
-all(feature = "ink-no-std", feature = "std"),
-derive(ink::storage::traits::StorageLayout)
+    all(feature = "ink-no-std", feature = "std"),
+    derive(ink::storage::traits::StorageLayout)
 )]
 pub enum Origin {
     Caller,
@@ -151,21 +151,21 @@ pub trait GetOrigin<T: frame_system::Config> {
         &self,
         env: Environment<E, BufInBufOutState>,
     ) -> RawOrigin<<T as SysConfig>::AccountId>
-        where
-            E: Ext<T = T>;
+    where
+        E: Ext<T = T>;
 }
 
 #[cfg(feature = "substrate")]
 impl<T> GetOrigin<T> for Origin
-    where
-        T: pallet_contracts::Config,
+where
+    T: pallet_contracts::Config,
 {
     fn get_origin<E: Ext>(
         &self,
         mut env: Environment<E, BufInBufOutState>,
     ) -> RawOrigin<<T as SysConfig>::AccountId>
-        where
-            E: Ext<T = T>,
+    where
+        E: Ext<T = T>,
     {
         RawOrigin::Signed(match self {
             Origin::Caller => env.ext().caller().clone(),

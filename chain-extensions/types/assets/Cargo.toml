@@ -22,24 +22,24 @@ sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkad
 [features]
 default = ["std"]
 substrate = [
-    "pallet-contracts",
-    "sp-runtime",
-    "frame-system",
+	"pallet-contracts",
+	"sp-runtime",
+	"frame-system",
 ]
 ink-no-std = [
-    "ink",
+	"ink",
 ]
 std = [
-    "scale-info/std",
-    "scale/std",
+	"scale-info/std",
+	"scale/std",
 ]
 substrate-std = [
-    "std",
-    "sp-runtime/std",
-    "frame-system/std",
-    "pallet-contracts/std",
+	"std",
+	"sp-runtime/std",
+	"frame-system/std",
+	"pallet-contracts/std",
 ]
 ink-std = [
-    "std",
-    "ink/std",
+	"std",
+	"ink/std",
 ]

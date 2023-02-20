@@ -26,7 +26,7 @@ use frame_support::traits::fungibles::InspectMetadata;
 use frame_support::traits::tokens::fungibles::approvals::Inspect;
 use pallet_assets::WeightInfo;
 use pallet_contracts::chain_extension::{
-    ChainExtension, Environment, Ext, InitState, RetVal, SysConfig
+    ChainExtension, Environment, Ext, InitState, RetVal, SysConfig,
 };
 use sp_runtime::traits::StaticLookup;
 use sp_runtime::DispatchError;
@@ -86,15 +86,15 @@ impl<T, W> Default for AssetsExtension<T, W> {
 }
 
 impl<T, W> ChainExtension<T> for AssetsExtension<T, W>
-    where
-        T: pallet_assets::Config + pallet_contracts::Config,
-        <<T as SysConfig>::Lookup as StaticLookup>::Source: From<<T as SysConfig>::AccountId>,
-        <T as SysConfig>::AccountId: From<[u8; 32]>,
-        W: weights::WeightInfo,
+where
+    T: pallet_assets::Config + pallet_contracts::Config,
+    <<T as SysConfig>::Lookup as StaticLookup>::Source: From<<T as SysConfig>::AccountId>,
+    <T as SysConfig>::AccountId: From<[u8; 32]>,
+    W: weights::WeightInfo,
 {
     fn call<E: Ext>(&mut self, env: Environment<E, InitState>) -> Result<RetVal, DispatchError>
-        where
-            E: Ext<T = T>,
+    where
+        E: Ext<T = T>,
     {
         let func_id = env.func_id().try_into()?;
         let mut env = env.buf_in_buf_out();
