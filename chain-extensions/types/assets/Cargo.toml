@@ -32,6 +32,9 @@ ink-no-std = [
 std = [
 	"scale-info/std",
 	"scale/std",
+	"pallet-contracts",
+	"sp-runtime",
+	"frame-system",
 ]
 substrate-std = [
 	"std",
