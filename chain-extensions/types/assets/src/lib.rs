@@ -17,16 +17,10 @@
 // along with Astar. If not, see <http://www.gnu.org/licenses/>.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-
 use scale::{Decode, Encode};
-
-#[cfg(feature = "substrate")]
 use frame_system::RawOrigin;
-#[cfg(feature = "substrate")]
 use pallet_contracts::chain_extension::{BufInBufOutState, Environment, Ext, SysConfig};
-#[cfg(feature = "substrate")]
 use scale::MaxEncodedLen;
-#[cfg(feature = "substrate")]
 use sp_runtime::{DispatchError, ModuleError};
 
 #[derive(PartialEq, Eq, Copy, Clone, Encode, Decode, Debug)]
@@ -66,14 +60,12 @@ pub enum Outcome {
     NoDeposit = 14,
     /// The operation would result in funds being burned.
     WouldBurn = 15,
-    #[cfg(feature = "ink-no-std")]
-    /// Encountered unknown status code
-    UnknownStatusCode,
+    /// Origin Caller is not supported
+    OriginCannotBeCaller = 98,
     /// Unknown error
     RuntimeError = 99,
 }
 
-#[cfg(feature = "substrate")]
 impl From<DispatchError> for Outcome {
     fn from(input: DispatchError) -> Self {
         let error_text = match input {
@@ -96,44 +88,14 @@ impl From<DispatchError> for Outcome {
             Some("AlreadyExists") => Outcome::AlreadyExists,
             Some("NoDeposit") => Outcome::NoDeposit,
             Some("WouldBurn") => Outcome::WouldBurn,
+            Some("OriginCannotBeCaller") => Outcome::OriginCannotBeCaller,
             _ => Outcome::RuntimeError,
         };
     }
 }
 
-#[cfg(feature = "ink-no-std")]
-impl ink::env::chain_extension::FromStatusCode for Outcome {
-    fn from_status_code(status_code: u32) -> Result<(), Self> {
-        match status_code {
-            0 => Ok(()),
-            1 => Err(Self::BalanceLow),
-            2 => Err(Self::NoAccount),
-            3 => Err(Self::NoPermission),
-            4 => Err(Self::Unknown),
-            5 => Err(Self::Frozen),
-            6 => Err(Self::InUse),
-            7 => Err(Self::BadWitness),
-            8 => Err(Self::MinBalanceZero),
-            9 => Err(Self::NoProvider),
-            10 => Err(Self::BadMetadata),
-            11 => Err(Self::Unapproved),
-            12 => Err(Self::WouldDie),
-            13 => Err(Self::AlreadyExists),
-            14 => Err(Self::NoDeposit),
-            15 => Err(Self::WouldBurn),
-            99 => Err(Self::RuntimeError),
-            _ => Err(Self::UnknownStatusCode),
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Encode, Decode)]
-#[cfg_attr(feature = "substrate", derive(MaxEncodedLen))]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Encode, Decode, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
-#[cfg_attr(
-    all(feature = "ink-no-std", feature = "std"),
-    derive(ink::storage::traits::StorageLayout)
-)]
 pub enum Origin {
     Caller,
     Address,
@@ -145,17 +107,15 @@ impl Default for Origin {
     }
 }
 
-#[cfg(feature = "substrate")]
 pub trait GetOrigin<T: frame_system::Config> {
     fn get_origin<E: Ext>(
         &self,
         env: Environment<E, BufInBufOutState>,
-    ) -> RawOrigin<<T as SysConfig>::AccountId>
+    ) -> Result<RawOrigin<<T as SysConfig>::AccountId>, DispatchError>
     where
         E: Ext<T = T>;
 }
 
-#[cfg(feature = "substrate")]
 impl<T> GetOrigin<T> for Origin
 where
     T: pallet_contracts::Config,
@@ -163,13 +123,16 @@ where
     fn get_origin<E: Ext>(
         &self,
         mut env: Environment<E, BufInBufOutState>,
-    ) -> RawOrigin<<T as SysConfig>::AccountId>
+    ) -> Result<RawOrigin<<T as SysConfig>::AccountId>, DispatchError>
     where
         E: Ext<T = T>,
     {
-        RawOrigin::Signed(match self {
-            Origin::Caller => env.ext().caller().clone(),
-            Origin::Address => env.ext().address().clone(),
-        })
+        match self {
+            // Set caller as Origin is unsafe for now. When contract  can be verified
+            // or a whitelist of contracts can be set.
+            // It will be allowed
+            Origin::Caller => Err(DispatchError::Other("OriginCannotBeCaller")),
+            Origin::Address => Ok(RawOrigin::Signed(env.ext().address().clone())),
+        }
     }
 }

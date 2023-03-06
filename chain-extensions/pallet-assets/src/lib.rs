@@ -112,7 +112,7 @@ where
                 env.charge_weight(base_weight)?;
 
                 let call_result = pallet_assets::Pallet::<T>::create(
-                    Origin::get_origin(&origin, env).into(),
+                    Origin::get_origin(&origin, env)?.into(),
                     id.into(),
                     admin.into(),
                     min_balance,
@@ -137,7 +137,7 @@ where
                 env.charge_weight(base_weight)?;
 
                 let call_result = pallet_assets::Pallet::<T>::transfer(
-                    Origin::get_origin(&origin, env).into(),
+                    Origin::get_origin(&origin, env)?.into(),
                     id.into(),
                     target.into(),
                     amount,
@@ -162,7 +162,7 @@ where
                 env.charge_weight(base_weight)?;
 
                 let call_result = pallet_assets::Pallet::<T>::mint(
-                    Origin::get_origin(&origin, env).into(),
+                    Origin::get_origin(&origin, env)?.into(),
                     id.into(),
                     beneficiary.into(),
                     amount,
@@ -187,7 +187,7 @@ where
                 env.charge_weight(base_weight)?;
 
                 let call_result = pallet_assets::Pallet::<T>::burn(
-                    Origin::get_origin(&origin, env).into(),
+                    Origin::get_origin(&origin, env)?.into(),
                     id.into(),
                     who.into(),
                     amount,
@@ -244,7 +244,7 @@ where
                 env.charge_weight(base_weight)?;
 
                 let call_result = pallet_assets::Pallet::<T>::approve_transfer(
-                    Origin::get_origin(&origin, env).into(),
+                    Origin::get_origin(&origin, env)?.into(),
                     id.into(),
                     delegate.into(),
                     amount,
@@ -268,7 +268,7 @@ where
                 env.charge_weight(base_weight)?;
 
                 let call_result = pallet_assets::Pallet::<T>::cancel_approval(
-                    Origin::get_origin(&origin, env).into(),
+                    Origin::get_origin(&origin, env)?.into(),
                     id.into(),
                     delegate.into(),
                 );
@@ -293,7 +293,7 @@ where
                 env.charge_weight(base_weight)?;
 
                 let call_result = pallet_assets::Pallet::<T>::transfer_approved(
-                    Origin::get_origin(&origin, env).into(),
+                    Origin::get_origin(&origin, env)?.into(),
                     id.into(),
                     owner.into(),
                     destination.into(),
@@ -323,7 +323,7 @@ where
                 env.charge_weight(base_weight)?;
 
                 let call_result = pallet_assets::Pallet::<T>::set_metadata(
-                    Origin::get_origin(&origin, env).into(),
+                    Origin::get_origin(&origin, env)?.into(),
                     id.into(),
                     name,
                     symbol,

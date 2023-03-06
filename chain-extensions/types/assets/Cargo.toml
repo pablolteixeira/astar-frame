@@ -9,40 +9,19 @@ repository = "https://github.com/AstarNetwork/astar-frame"
 description = "Types definitions forassets chain-extension"
 
 [dependencies]
-ink = { version = "~4.0.0", default-features = false, optional = true }
-ink_metadata = { version = "~4.0.0", features = ["derive"], optional = true }
-
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3.0", default-features = false, features = ["derive"] }
 
-frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.37", default-features = false, optional = true }
-pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.37", default-features = false, optional = true }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.37", default-features = false, optional = true }
+frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.37", default-features = false }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.37", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.37", default-features = false }
 
 [features]
 default = ["std"]
-substrate = [
-	"pallet-contracts",
-	"sp-runtime",
-	"frame-system",
-]
-ink-no-std = [
-	"ink",
-]
 std = [
 	"scale-info/std",
 	"scale/std",
-	"pallet-contracts",
-	"sp-runtime",
-	"frame-system",
-]
-substrate-std = [
-	"std",
-	"sp-runtime/std",
-	"frame-system/std",
 	"pallet-contracts/std",
-]
-ink-std = [
-	"std",
-	"ink/std",
+	"sp-runtime/std",
+	"frame-system/std"
 ]
