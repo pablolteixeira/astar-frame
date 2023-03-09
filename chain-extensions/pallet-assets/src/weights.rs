@@ -31,6 +31,7 @@ pub trait WeightInfo {
     fn metadata_name() -> Weight;
     fn metadata_symbol() -> Weight;
     fn metadata_decimals() -> Weight;
+    fn remove_items_limit() -> Weight;
 }
 
 /// Weights for pallet-assets chain-extension
@@ -57,6 +58,10 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
     }
 
     fn metadata_decimals() -> Weight {
+        T::DbWeight::get().reads(1 as u64)
+    }
+
+    fn remove_items_limit() -> Weight {
         T::DbWeight::get().reads(1 as u64)
     }
 }

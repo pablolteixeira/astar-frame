@@ -17,10 +17,10 @@
 // along with Astar. If not, see <http://www.gnu.org/licenses/>.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-use scale::{Decode, Encode};
 use frame_system::RawOrigin;
 use pallet_contracts::chain_extension::{BufInBufOutState, Environment, Ext, SysConfig};
 use scale::MaxEncodedLen;
+use scale::{Decode, Encode};
 use sp_runtime::{DispatchError, ModuleError};
 
 #[derive(PartialEq, Eq, Copy, Clone, Encode, Decode, Debug)]
@@ -60,6 +60,15 @@ pub enum Outcome {
     NoDeposit = 14,
     /// The operation would result in funds being burned.
     WouldBurn = 15,
+    /// The asset is a live asset and is actively being used. Usually emit for operations such
+    /// as `start_destroy` which require the asset to be in a destroying state.
+    LiveAsset = 16,
+    /// The asset is not live, and likely being destroyed.
+    AssetNotLive = 17,
+    /// The asset status is not the expected status.
+    IncorrectStatus = 18,
+    /// The asset should be frozen before the given operation.
+    NotFrozen = 19,
     /// Origin Caller is not supported
     OriginCannotBeCaller = 98,
     /// Unknown error
@@ -88,6 +97,10 @@ impl From<DispatchError> for Outcome {
             Some("AlreadyExists") => Outcome::AlreadyExists,
             Some("NoDeposit") => Outcome::NoDeposit,
             Some("WouldBurn") => Outcome::WouldBurn,
+            Some("LiveAsset") => Outcome::LiveAsset,
+            Some("AssetNotLive") => Outcome::AssetNotLive,
+            Some("IncorrectStatus") => Outcome::IncorrectStatus,
+            Some("NotFrozen") => Outcome::NotFrozen,
             Some("OriginCannotBeCaller") => Outcome::OriginCannotBeCaller,
             _ => Outcome::RuntimeError,
         };
