@@ -17,8 +17,6 @@
 // along with Astar. If not, see <http://www.gnu.org/licenses/>.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-use frame_system::RawOrigin;
-use pallet_contracts::chain_extension::{BufInBufOutState, Environment, Ext, SysConfig};
 use scale::MaxEncodedLen;
 use scale::{Decode, Encode};
 use sp_runtime::{DispatchError, ModuleError};
@@ -101,7 +99,6 @@ impl From<DispatchError> for Outcome {
             Some("AssetNotLive") => Outcome::AssetNotLive,
             Some("IncorrectStatus") => Outcome::IncorrectStatus,
             Some("NotFrozen") => Outcome::NotFrozen,
-            Some("OriginCannotBeCaller") => Outcome::OriginCannotBeCaller,
             _ => Outcome::RuntimeError,
         };
     }
@@ -117,35 +114,5 @@ pub enum Origin {
 impl Default for Origin {
     fn default() -> Self {
         Self::Address
-    }
-}
-
-pub trait GetOrigin<T: frame_system::Config> {
-    fn get_origin<E: Ext>(
-        &self,
-        env: Environment<E, BufInBufOutState>,
-    ) -> Result<RawOrigin<<T as SysConfig>::AccountId>, DispatchError>
-    where
-        E: Ext<T = T>;
-}
-
-impl<T> GetOrigin<T> for Origin
-where
-    T: pallet_contracts::Config,
-{
-    fn get_origin<E: Ext>(
-        &self,
-        mut env: Environment<E, BufInBufOutState>,
-    ) -> Result<RawOrigin<<T as SysConfig>::AccountId>, DispatchError>
-    where
-        E: Ext<T = T>,
-    {
-        match self {
-            // Set caller as Origin is unsafe for now. When contract  can be verified
-            // or a whitelist of contracts can be set.
-            // It will be allowed
-            Origin::Caller => Err(DispatchError::Other("OriginCannotBeCaller")),
-            Origin::Address => Ok(RawOrigin::Signed(env.ext().address().clone())),
-        }
     }
 }
