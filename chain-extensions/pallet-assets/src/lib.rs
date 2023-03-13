@@ -21,10 +21,10 @@
 pub mod weights;
 
 use assets_chain_extension_types::{Origin, Outcome};
-use frame_system::RawOrigin;
 use codec::Encode;
 use frame_support::traits::fungibles::InspectMetadata;
 use frame_support::traits::tokens::fungibles::approvals::Inspect;
+use frame_system::RawOrigin;
 use pallet_assets::WeightInfo;
 use pallet_contracts::chain_extension::{
     ChainExtension, Environment, Ext, InitState, RetVal, SysConfig,
