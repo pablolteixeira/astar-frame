@@ -201,15 +201,15 @@ pub mod pallet {
     pub(crate) type PreApprovedDevelopers<T: Config> =
         StorageMap<_, Twox64Concat, T::AccountId, (), ValueQuery>;
 
-    /// Delegates
+    /// Double map where Staker account points to a smart-contract that points to a delegate to earn the rewards
     #[pallet::storage]
     #[pallet::getter(fn delegates)]
     pub(crate) type Delegates<T: Config> = StorageDoubleMap<
         _,
         Blake2_128Concat,
-        T::SmartContract,
-        Blake2_128Concat,
         T::AccountId,
+        Blake2_128Concat,
+        T::SmartContract,
         T::AccountId
     >;
 
@@ -303,6 +303,12 @@ pub mod pallet {
         NotActiveStaker,
         /// Transfering nomination to the same contract
         NominationTransferToSameContract,
+        /// Staking delegate don't exist in Delegates storage.
+        StakingDelegateDontExist,
+        /// Account don't have permission to change the delegate
+        DontHavePermissionToDelegate,
+        /// Account can't delegate own self if is not the staker
+        CantDelegateOwnAccount
     }
 
     #[pallet::hooks]
@@ -535,6 +541,11 @@ pub mod pallet {
             Self::update_staker_info(&staker, &contract_id, staker_info);
             ContractEraStake::<T>::insert(&contract_id, current_era, staking_info);
 
+            // Insert the delegate to this contract if not yet
+            if !Delegates::<T>::contains_key(&staker, &contract_id) {
+                Delegates::<T>::insert(&staker, &contract_id, staker.clone());
+            }
+
             Self::deposit_event(Event::<T>::BondAndStake(
                 staker,
                 contract_id,
@@ -706,6 +717,11 @@ pub mod pallet {
             ContractEraStake::<T>::insert(&target_contract_id, current_era, target_staking_info);
             Self::update_staker_info(&staker, &target_contract_id, target_staker_info);
 
+            // Update delegate data 
+            let delegate = Self::delegates(&staker, &origin_contract_id).unwrap_or(staker.clone());
+            Delegates::<T>::insert(&staker, &target_contract_id, delegate);
+            Delegates::<T>::remove(&staker, &origin_contract_id);
+
             Self::deposit_event(Event::<T>::NominationTransfer(
                 staker,
                 origin_contract_id,
@@ -729,7 +745,7 @@ pub mod pallet {
             contract_id: T::SmartContract,
         ) -> DispatchResultWithPostInfo {
             Self::ensure_pallet_enabled()?;
-            let staker = ensure_signed(origin)?;
+            let staker = ensure_signed(origin)?; 
 
             // Ensure we have something to claim
             let mut staker_info = Self::staker_info(&staker, &contract_id);
@@ -761,7 +777,7 @@ pub mod pallet {
                 ledger.reward_destination,
                 dapp_info.state,
                 staker_info.latest_staked_value(),
-            );
+            );  
 
             if should_restake_reward {
                 staker_info
@@ -809,9 +825,11 @@ pub mod pallet {
                 ));
             }
 
-            T::Currency::resolve_creating(&staker, reward_imbalance);
+            let delegate = Self::delegates(&staker, &contract_id).unwrap_or(staker.clone());
+
+            T::Currency::resolve_creating(&delegate, reward_imbalance);
             Self::update_staker_info(&staker, &contract_id, staker_info);
-            Self::deposit_event(Event::<T>::Reward(staker, contract_id, era, staker_reward));
+            Self::deposit_event(Event::<T>::Reward(delegate, contract_id, era, staker_reward));
 
             Ok(Some(if should_restake_reward {
                 T::WeightInfo::claim_staker_with_restake()
@@ -987,6 +1005,38 @@ pub mod pallet {
             ensure_root(origin)?;
 
             ContractEraStake::<T>::insert(contract, era, contract_stake_info);
+
+            Ok(().into())
+        }
+
+        /// Used to delegate a new destination to earn the stake rewards.
+        /// Possible situations:
+        /// 1 - Staker is the delegate and want to delegate someone else;
+        /// 2 - Delegate is not the staker and want to delegate someone else;
+        /// 3 - Staker is not the delegate but want to be.
+        /// Main dificulty here is because is not possible at first to know if "origin" is the staker, the delegate or someone else.
+        #[pallet::weight(T::DbWeight::get().reads_writes(1, 1))]
+        pub fn set_new_delegate(
+            origin: OriginFor<T>,
+            staker: T::AccountId,
+            contract_id: T::SmartContract,
+            destination_account: T::AccountId
+        ) -> DispatchResultWithPostInfo {
+            let who = ensure_signed(origin)?;
+
+            let delegate = Delegates::<T>::get(&staker, &contract_id).ok_or(Error::<T>::StakingDelegateDontExist)?;
+
+            ensure!(
+                delegate == staker || delegate == who, 
+                Error::<T>::DontHavePermissionToDelegate
+            );
+
+            ensure!(
+                delegate != staker && who == destination_account,
+                Error::<T>::CantDelegateOwnAccount
+            );
+            
+            Delegates::<T>::insert(&staker, &contract_id, destination_account);
 
             Ok(().into())
         }
